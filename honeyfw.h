@@ -4,7 +4,16 @@
 /*
  * logic stuff
  */
+typedef unsigned char istate;
+
+#define PRESSED(i) ((i) & 0x00000001)
+#define JUST_PRESSED(i) ((i) & 0x00000011)
+#define RELEASED(i) (!((i) & 0x00000001))
+#define JUST_RELEASED(i) (!((i) & 0x00000001) && ((i) & 0x00000010))
+
 typedef struct {
+
+	istate up, down, left, right;
 
 } Input;
 
