@@ -33,11 +33,16 @@ int main() {
 		return 1;
 	}
 
-	screen_buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
+	screen_buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
+
+	if (!screen_buffer) {
+		printf("Error creating screen buffer:\n%s\n", SDL_GetError());
+		return 1;
+	}
 
 	// process events until window is closed
 	SDL_Event event;
-	SDL_Rect letterbox = {0, 0, WIDTH * 2, HEIGHT * 2};
+	SDL_Rect letterbox = { 0, 0, WIDTH * 2, HEIGHT * 2 };
 
 	char running = 1;
 
@@ -79,7 +84,7 @@ int main() {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 			// clear screen_buffer to black
 		SDL_RenderClear(renderer);
 
-		logic_process();
+		logic_process(NULL);
 
 		SDL_SetRenderTarget(renderer, NULL); 						// reset render target back to window
 		SDL_RenderCopy(renderer, screen_buffer, NULL, &letterbox); 	// render screen_buffer

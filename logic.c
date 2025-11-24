@@ -7,6 +7,6 @@ void logic_init() {
 	world_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 }
 
-void logic_process() {
+void logic_process(Input *input) {
 	draw_sprite_from_sheet(world_sprites, 0, 0, 0, 0);
 }
