@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include "logic.h"
+#include "honeyfw.h"
 
 #define ASPECT_RATIO (width / (float) height)
 static int width = 128;
@@ -11,7 +11,7 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *screen_buffer;
 
-static void refit_letterbox(SDL_Rect *letterbox, int window_w, int window_h) {
+static inline void refit_letterbox(SDL_Rect *letterbox, int window_w, int window_h) {
 
 	#define MIN(a, b) ((a) > (b) ? (b) : (a))
 
@@ -30,6 +30,7 @@ int main() {
 		return 1;
 	}
 
+	// initialize window
 	window = SDL_CreateWindow("Roguelike", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 400, SDL_WINDOW_RESIZABLE);
 
 	if (!window) {
@@ -37,6 +38,7 @@ int main() {
 		return 2;
     }
 
+	// initialize window renderer
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
 	if (!renderer) {
@@ -44,8 +46,8 @@ int main() {
 		return 3;
 	}
 
-	// initialize game state, including screen width/height
-	logic_init(&width, &height);
+	// initialize game state (which requires renderer), including screen width/height
+	init(&width, &height);
 
 	// initialize screen
 	screen_buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, width, height);
@@ -60,6 +62,7 @@ int main() {
 
 	// process events until window is closed
 	SDL_Event event;
+	Input input = {};
 	char running = 1;
 
 	while (running) {
@@ -76,6 +79,8 @@ int main() {
 
 			} else if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && !event.key.repeat) {
 
+				// TODO update input
+
 				// event.key.keysym.scancode
 				// event.key.state == SDL_PRESSED
 				// SDL_SCANCODE_Z
@@ -90,7 +95,7 @@ int main() {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 			// clear screen_buffer to black
 		SDL_RenderClear(renderer);
 
-		logic_process(NULL);
+		process(&input);
 
 		SDL_SetRenderTarget(renderer, NULL); 						// reset render target back to window
 		SDL_RenderCopy(renderer, screen_buffer, NULL, &letterbox); 	// render screen_buffer

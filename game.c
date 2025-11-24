@@ -1,4 +1,4 @@
-#include "logic.h"
+#include "honeyfw.h"
 
 static render_t tile_sprites;
 
@@ -31,14 +31,14 @@ static void generate_dungeon(tile_id **dungeon, int w, int h) {
 	// one by one, connect a non-connected room to its closest room until all rooms are connected
 }
 
-void logic_init(int *width, int *height) {
+void init(int *width, int *height) {
 
 	*width = 256;
 	*height = 240;
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 }
 
-void logic_process(Input *input) {
+void process(Input *input) {
 
 	for (int x = 0; x < 20; x++) {
 		for (int y = 0; y < 20; y++) {
