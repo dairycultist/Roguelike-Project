@@ -26,7 +26,7 @@ static void generate_dungeon(tile_id **dungeon, int w, int h) {
 	// one by one, connect a non-connected room to its closest room until all rooms are connected
 }
 
-void logic_init() {
+void logic_init(int *width, int *height) {
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 }
 

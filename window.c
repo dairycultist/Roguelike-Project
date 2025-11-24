@@ -4,13 +4,25 @@
 #include "sprite.h"
 #include "logic.h"
 
-#define WIDTH 256
-#define HEIGHT 240
-#define ASPECT_RATIO (WIDTH / (float) HEIGHT)
+#define ASPECT_RATIO (width / (float) height)
+static int width = 256;
+static int height = 240;
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *screen_buffer;
+
+static void refit_letterbox(SDL_Rect *letterbox, int window_w, int window_h) {
+
+	#define MIN(a, b) ((a) > (b) ? (b) : (a))
+
+	// dynamically change letterbox based on screen resize
+	letterbox->w = MIN(window_w, window_h * ASPECT_RATIO);
+	letterbox->h = MIN(window_h, window_w / ASPECT_RATIO);
+
+	letterbox->x = (window_w - letterbox->w) / 2;
+	letterbox->y = (window_h - letterbox->h) / 2;
+}
 
 int main() {
 
@@ -19,12 +31,15 @@ int main() {
 		return 1;
 	}
 
-	window = SDL_CreateWindow("Roguelike", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("Roguelike", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 400, SDL_WINDOW_RESIZABLE);
 
 	if (!window) {
 		printf("Error creating window:\n%s\n", SDL_GetError());
 		return 2;
     }
+
+	SDL_Rect letterbox;
+	refit_letterbox(&letterbox, 600, 400);
 
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
@@ -33,7 +48,13 @@ int main() {
 		return 3;
 	}
 
-	screen_buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
+	set_sprite_renderer(renderer);
+
+	// initialize game state, including screen width/height
+	logic_init(&width, &height);
+
+	// initialize screen
+	screen_buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, width, height);
 
 	if (!screen_buffer) {
 		printf("Error creating screen buffer:\n%s\n", SDL_GetError());
@@ -42,12 +63,7 @@ int main() {
 
 	// process events until window is closed
 	SDL_Event event;
-	SDL_Rect letterbox = { 0, 0, WIDTH * 2, HEIGHT * 2 };
-
 	char running = 1;
-
-	set_sprite_renderer(renderer);
-	logic_init();
 
 	while (running) {
 
@@ -59,14 +75,7 @@ int main() {
 
 			} else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
 
-				#define MIN(a, b) ((a) > (b) ? (b) : (a))
-
-				// dynamically change letterbox based on screen resize
-				letterbox.w = MIN(event.window.data1, event.window.data2 * ASPECT_RATIO);
-				letterbox.h = MIN(event.window.data2, event.window.data1 / ASPECT_RATIO);
-
-				letterbox.x = (event.window.data1 - letterbox.w) / 2;
-				letterbox.y = (event.window.data2 - letterbox.h) / 2;
+				refit_letterbox(&letterbox, event.window.data1, event.window.data2);
 
 			} else if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && !event.key.repeat) {
 
