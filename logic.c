@@ -32,6 +32,9 @@ static void generate_dungeon(tile_id **dungeon, int w, int h) {
 }
 
 void logic_init(int *width, int *height) {
+
+	*width = 256;
+	*height = 240;
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 }
 

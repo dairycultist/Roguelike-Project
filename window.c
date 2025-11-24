@@ -4,8 +4,8 @@
 #include "logic.h"
 
 #define ASPECT_RATIO (width / (float) height)
-static int width = 256;
-static int height = 240;
+static int width = 128;
+static int height = 128;
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
@@ -37,9 +37,6 @@ int main() {
 		return 2;
     }
 
-	SDL_Rect letterbox;
-	refit_letterbox(&letterbox, 600, 400);
-
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
 	if (!renderer) {
@@ -57,6 +54,9 @@ int main() {
 		printf("Error creating screen buffer:\n%s\n", SDL_GetError());
 		return 4;
 	}
+
+	SDL_Rect letterbox;
+	refit_letterbox(&letterbox, 600, 400);
 
 	// process events until window is closed
 	SDL_Event event;
