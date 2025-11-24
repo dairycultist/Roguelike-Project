@@ -1,13 +1,12 @@
 #include "logic.h"
-#include "sprite.h"
 
-static SpriteSheet *tile_sprites;
+static render_t tile_sprites;
 
 typedef unsigned char tile_id;
 
 typedef struct {
 
-	unsigned char sprites[4]; // can vary between all four
+	int sprites[4]; // can vary between all four
 	unsigned char bool_collidable;
 
 } Tile;
@@ -17,7 +16,13 @@ static const Tile tiles[] = {
 };
 
 static void draw_tile(const Tile *tile, int x, int y) {
-	draw_sprite_from_sheet(tile_sprites, tile->sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + x * 2 + y) % 4], x * 8, y * 8, 0); // TODO account for player pos
+	draw_render_t(
+		tile_sprites,
+		x * 8,
+		y * 8,
+		0,
+		&tile->sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + x * 2 + y) % 4]
+	); // TODO account for player pos
 }
 
 static void generate_dungeon(tile_id **dungeon, int w, int h) {

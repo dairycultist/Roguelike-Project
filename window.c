@@ -1,7 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include "sprite.h"
 #include "logic.h"
 
 #define ASPECT_RATIO (width / (float) height)
@@ -47,8 +46,6 @@ int main() {
 		printf("Error creating renderer:\n%s\n", SDL_GetError());
 		return 3;
 	}
-
-	set_sprite_renderer(renderer);
 
 	// initialize game state, including screen width/height
 	logic_init(&width, &height);
@@ -109,3 +106,177 @@ int main() {
 
 	return 0;
 }
+
+/*
+ * rendering implementation
+ */
+
+#define TYPE_SPRITE 0
+#define TYPE_SPRITE_SHEET 1
+#define TYPE_FONT 2
+
+typedef struct {
+
+	unsigned char type;
+    void *sdl_texture;
+    int w;
+    int h;
+
+} Sprite;
+
+typedef struct {
+
+	unsigned char type;
+    void *sdl_texture;
+    int sprite_w;
+    int sprite_h;
+    int sprites_per_row;
+
+} SpriteSheet;
+
+static void *render_ts[256] = {};
+
+render_t load_sprite(const char *path) {
+
+	Sprite *sprite = malloc(sizeof(Sprite));
+
+	sprite->type = TYPE_SPRITE;
+	sprite->sdl_texture = IMG_LoadTexture(renderer, path);
+
+	SDL_QueryTexture(sprite->sdl_texture, NULL, NULL, &sprite->w, &sprite->h);
+
+	//
+	for (render_t i = 0; i < sizeof(render_ts); i++) {
+
+		if (render_ts[i] == NULL) {
+
+			render_ts[i] = sprite;
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+render_t load_sprite_sheet(const char *path, int sprite_width, int sprite_height) {
+
+	SpriteSheet *sprite_sheet = malloc(sizeof(SpriteSheet));
+
+	sprite_sheet->type = TYPE_SPRITE_SHEET;
+	sprite_sheet->sdl_texture = IMG_LoadTexture(renderer, path);
+
+	// get the width to determine the number of sprites per row (rounding down)
+	int width;
+	SDL_QueryTexture(sprite_sheet->sdl_texture, NULL, NULL, &width, NULL);
+
+	sprite_sheet->sprite_w = sprite_width;
+	sprite_sheet->sprite_h = sprite_height;
+	sprite_sheet->sprites_per_row = width / sprite_width;
+
+	//
+	for (render_t i = 0; i < sizeof(render_ts); i++) {
+
+		if (render_ts[i] == NULL) {
+
+			render_ts[i] = sprite_sheet;
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void draw_render_t(render_t r, int x, int y, int flip, const void *extra) {
+
+	switch (*(unsigned char *) render_ts[r]) {
+
+		case TYPE_SPRITE: {
+			Sprite *sprite = (Sprite *) render_ts[r];
+			SDL_Rect texture_rect = { x, y, sprite->w, sprite->h };
+			SDL_RenderCopyEx(renderer, sprite->sdl_texture, NULL, &texture_rect, 0.0, NULL, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+			break;
+		}
+
+		case TYPE_SPRITE_SHEET: {
+			SpriteSheet *sprite_sheet = (SpriteSheet *) render_ts[r];
+			SDL_Rect copy_rect = {
+				((*(int *) extra) % sprite_sheet->sprites_per_row) * sprite_sheet->sprite_w,
+				((*(int *) extra) / sprite_sheet->sprites_per_row) * sprite_sheet->sprite_h,
+				sprite_sheet->sprite_w,
+				sprite_sheet->sprite_h
+			};
+			SDL_Rect paste_rect = { x, y, sprite_sheet->sprite_w, sprite_sheet->sprite_h };
+			SDL_RenderCopyEx(renderer, sprite_sheet->sdl_texture, &copy_rect, &paste_rect, 0.0, NULL, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+			break;
+		}
+		
+		default:
+			break;
+	}
+}
+
+void free_render_t(render_t r) {
+	
+	switch (*(unsigned char *) render_ts[r]) {
+
+		case TYPE_SPRITE:
+			SDL_DestroyTexture(((Sprite *) render_ts[r])->sdl_texture);
+			break;
+
+		case TYPE_SPRITE_SHEET:
+			SDL_DestroyTexture(((SpriteSheet *) render_ts[r])->sdl_texture);
+			break;
+		
+		default:
+			break;
+	}
+
+	free(render_ts[r]);
+	render_ts[r] = NULL;
+}
+
+/*
+ * special sprite sheet for text; follows a specific format
+ */
+// void draw_text(SpriteSheet *sprite_sheet, char *text, int x, int y) {
+
+// 	int start_x = x;
+
+// 	while (*text) {
+
+// 		if (*text >= 'A' && *text <= 'Z') {
+
+// 			draw_sprite_from_sheet(sprite_sheet, *text - 65, x, y, 0);
+// 			x += sprite_sheet->sprite_w;
+// 		}
+
+// 		else if (*text == '!') {
+// 			draw_sprite_from_sheet(sprite_sheet, 26, x, y, 0);
+// 			x += sprite_sheet->sprite_w;
+// 		}
+
+// 		else if (*text == '?') {
+// 			draw_sprite_from_sheet(sprite_sheet, 27, x, y, 0);
+// 			x += sprite_sheet->sprite_w;
+// 		}
+
+// 		else if (*text >= '\'' && *text <= '/') {
+
+// 			draw_sprite_from_sheet(sprite_sheet, *text - 11, x, y, 0);
+// 			x += sprite_sheet->sprite_w;
+// 		}
+
+// 		else if (*text == '\n') {
+
+// 			x = start_x;
+// 			y += sprite_sheet->sprite_h + 1; // + 1 for line height spacing
+// 		}
+
+// 		else if (*text == ' ') {
+
+// 			x += sprite_sheet->sprite_w;
+// 		}
+
+// 		text++;
+// 	}
+// }
