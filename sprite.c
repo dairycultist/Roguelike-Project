@@ -3,6 +3,9 @@
 
 #include "sprite.h"
 
+/*
+ * single sprites
+ */
 Sprite *load_sprite(SDL_Renderer *renderer, const char *path) {
 
 	Sprite *sprite = malloc(sizeof(Sprite));
@@ -27,6 +30,9 @@ void free_sprite(Sprite *sprite) {
 	free(sprite);
 }
 
+/*
+ * sprite sheets
+ */
 SpriteSheet *load_sprite_sheet(SDL_Renderer *renderer, const char *path, int sprite_width, int sprite_height) {
 
 	SpriteSheet *sprite_sheet = malloc(sizeof(SpriteSheet));
@@ -59,7 +65,15 @@ void draw_sprite_from_sheet(SDL_Renderer *renderer, SpriteSheet *sprite_sheet, i
 	SDL_RenderCopyEx(renderer, sprite_sheet->sdl_texture, &copy_rect, &paste_rect, 0.0, NULL, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 }
 
-// text sprite sheets follows a specific format
+void free_sprite_sheet(SpriteSheet *sprite_sheet) {
+
+	SDL_DestroyTexture(sprite_sheet->sdl_texture);
+	free(sprite_sheet);
+}
+
+/*
+ * special sprite sheet for text; follows a specific format
+ */
 void draw_text(SDL_Renderer *renderer, SpriteSheet *sprite_sheet, char *text, int x, int y) {
 
 	int start_x = x;
@@ -101,10 +115,4 @@ void draw_text(SDL_Renderer *renderer, SpriteSheet *sprite_sheet, char *text, in
 
 		text++;
 	}
-}
-
-void free_sprite_sheet(SpriteSheet *sprite_sheet) {
-
-	SDL_DestroyTexture(sprite_sheet->sdl_texture);
-	free(sprite_sheet);
 }

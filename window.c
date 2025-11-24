@@ -3,7 +3,7 @@
 
 #include "sprite.h"
 
-#define WIDTH 320
+#define WIDTH 256
 #define HEIGHT 240
 #define ASPECT_RATIO (WIDTH / (float) HEIGHT)
 
@@ -42,6 +42,8 @@ int main() {
 
 	char running = 1;
 
+	SpriteSheet *world_sprites = load_sprite_sheet(renderer, "rogue_tileset.png", 8, 8);
+
 	while (running) {
 
 		while (SDL_PollEvent(&event)) {
@@ -78,6 +80,7 @@ int main() {
 		SDL_RenderClear(renderer);
 
 		// logic/rendering
+		draw_sprite_from_sheet(renderer, world_sprites, 0, 0, 0, 0);
 
 		SDL_SetRenderTarget(renderer, NULL); 						// reset render target back to window
 		SDL_RenderCopy(renderer, screen_buffer, NULL, &letterbox); 	// render screen_buffer
