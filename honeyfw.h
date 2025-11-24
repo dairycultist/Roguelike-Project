@@ -6,14 +6,10 @@
  */
 typedef unsigned char istate;
 
-inline int is_pressed(istate input);
-inline int is_just_pressed(istate input);
-inline int is_released(istate input);
-inline int is_just_released(istate input);
-
 typedef struct {
 
-	istate up, down, left, right;
+    istate up, down, left, right;
+    istate up_justchanged, down_justchanged, left_justchanged, right_justchanged;
 
 } Input;
 
