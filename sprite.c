@@ -3,10 +3,17 @@
 
 #include "sprite.h"
 
+static SDL_Renderer *renderer;
+
+void set_sprite_renderer(void *sdl_renderer) {
+
+	renderer = (SDL_Renderer *) sdl_renderer;
+}
+
 /*
  * single sprites
  */
-Sprite *load_sprite(SDL_Renderer *renderer, const char *path) {
+Sprite *load_sprite(const char *path) {
 
 	Sprite *sprite = malloc(sizeof(Sprite));
 
@@ -17,7 +24,7 @@ Sprite *load_sprite(SDL_Renderer *renderer, const char *path) {
 	return sprite;
 }
 
-void draw_sprite(SDL_Renderer *renderer, Sprite *sprite, int x, int y, int flip) {
+void draw_sprite(Sprite *sprite, int x, int y, int flip) {
 
 	SDL_Rect texture_rect = { x, y, sprite->w, sprite->h };
 
@@ -33,7 +40,7 @@ void free_sprite(Sprite *sprite) {
 /*
  * sprite sheets
  */
-SpriteSheet *load_sprite_sheet(SDL_Renderer *renderer, const char *path, int sprite_width, int sprite_height) {
+SpriteSheet *load_sprite_sheet(const char *path, int sprite_width, int sprite_height) {
 
 	SpriteSheet *sprite_sheet = malloc(sizeof(SpriteSheet));
 
@@ -50,7 +57,7 @@ SpriteSheet *load_sprite_sheet(SDL_Renderer *renderer, const char *path, int spr
 	return sprite_sheet;
 }
 
-void draw_sprite_from_sheet(SDL_Renderer *renderer, SpriteSheet *sprite_sheet, int index, int x, int y, int flip) {
+void draw_sprite_from_sheet(SpriteSheet *sprite_sheet, int index, int x, int y, int flip) {
 
 	SDL_Rect copy_rect = {
 
@@ -74,7 +81,7 @@ void free_sprite_sheet(SpriteSheet *sprite_sheet) {
 /*
  * special sprite sheet for text; follows a specific format
  */
-void draw_text(SDL_Renderer *renderer, SpriteSheet *sprite_sheet, char *text, int x, int y) {
+void draw_text(SpriteSheet *sprite_sheet, char *text, int x, int y) {
 
 	int start_x = x;
 
@@ -82,23 +89,23 @@ void draw_text(SDL_Renderer *renderer, SpriteSheet *sprite_sheet, char *text, in
 
 		if (*text >= 'A' && *text <= 'Z') {
 
-			draw_sprite_from_sheet(renderer, sprite_sheet, *text - 65, x, y, 0);
+			draw_sprite_from_sheet(sprite_sheet, *text - 65, x, y, 0);
 			x += sprite_sheet->sprite_w;
 		}
 
 		else if (*text == '!') {
-			draw_sprite_from_sheet(renderer, sprite_sheet, 26, x, y, 0);
+			draw_sprite_from_sheet(sprite_sheet, 26, x, y, 0);
 			x += sprite_sheet->sprite_w;
 		}
 
 		else if (*text == '?') {
-			draw_sprite_from_sheet(renderer, sprite_sheet, 27, x, y, 0);
+			draw_sprite_from_sheet(sprite_sheet, 27, x, y, 0);
 			x += sprite_sheet->sprite_w;
 		}
 
 		else if (*text >= '\'' && *text <= '/') {
 
-			draw_sprite_from_sheet(renderer, sprite_sheet, *text - 11, x, y, 0);
+			draw_sprite_from_sheet(sprite_sheet, *text - 11, x, y, 0);
 			x += sprite_sheet->sprite_w;
 		}
 

@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "sprite.h"
+#include "logic.h"
 
 #define WIDTH 256
 #define HEIGHT 240
@@ -40,7 +41,8 @@ int main() {
 
 	char running = 1;
 
-	SpriteSheet *world_sprites = load_sprite_sheet(renderer, "rogue_tileset.png", 8, 8);
+	set_sprite_renderer(renderer);
+	logic_init();
 
 	while (running) {
 
@@ -77,8 +79,7 @@ int main() {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 			// clear screen_buffer to black
 		SDL_RenderClear(renderer);
 
-		// logic/rendering
-		draw_sprite_from_sheet(renderer, world_sprites, 0, 0, 0, 0);
+		logic_process();
 
 		SDL_SetRenderTarget(renderer, NULL); 						// reset render target back to window
 		SDL_RenderCopy(renderer, screen_buffer, NULL, &letterbox); 	// render screen_buffer
