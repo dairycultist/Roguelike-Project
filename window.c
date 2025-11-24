@@ -19,25 +19,25 @@ int main() {
 		return 1;
 	}
 
-	window = SDL_CreateWindow("Berry2D", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("Roguelike", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH * 2, HEIGHT * 2, SDL_WINDOW_RESIZABLE);
 
 	if (!window) {
 		printf("Error creating window:\n%s\n", SDL_GetError());
-		return 1;
+		return 2;
     }
 
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
 	if (!renderer) {
 		printf("Error creating renderer:\n%s\n", SDL_GetError());
-		return 1;
+		return 3;
 	}
 
 	screen_buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
 
 	if (!screen_buffer) {
 		printf("Error creating screen buffer:\n%s\n", SDL_GetError());
-		return 1;
+		return 4;
 	}
 
 	// process events until window is closed
@@ -93,6 +93,7 @@ int main() {
 		SDL_Delay(1000 / 60);
 	}
 
+	SDL_DestroyTexture(screen_buffer);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
