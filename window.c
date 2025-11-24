@@ -13,8 +13,6 @@ static SDL_Texture *screen_buffer;
 
 int main() {
 
-	printf("Starting Berry2D\n");
-
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		printf("Error initializing SDL:\n%s\n", SDL_GetError());
 		return 1;
