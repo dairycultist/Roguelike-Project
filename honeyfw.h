@@ -4,12 +4,10 @@
 /*
  * input stuff
  */
-typedef unsigned char istate;
-
 typedef struct {
 
-    istate up, down, left, right;
-    istate up_justchanged, down_justchanged, left_justchanged, right_justchanged;
+    int up, down, left, right;
+    int up_justchanged, down_justchanged, left_justchanged, right_justchanged;
 
 } Input;
 
