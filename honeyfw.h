@@ -2,14 +2,14 @@
 #define HONEYFW_H
 
 /*
- * logic stuff
+ * input stuff
  */
 typedef unsigned char istate;
 
-#define PRESSED(i) ((i) & 0x00000001)
-#define JUST_PRESSED(i) ((i) & 0x00000011)
-#define RELEASED(i) (!((i) & 0x00000001))
-#define JUST_RELEASED(i) (!((i) & 0x00000001) && ((i) & 0x00000010))
+inline int is_pressed(istate input);
+inline int is_just_pressed(istate input);
+inline int is_released(istate input);
+inline int is_just_released(istate input);
 
 typedef struct {
 
@@ -17,6 +17,9 @@ typedef struct {
 
 } Input;
 
+/*
+ * logic stuff
+ */
 void init(int *width, int *height);
 void process(Input *input);
 
