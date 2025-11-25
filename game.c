@@ -28,7 +28,6 @@ static const Tile tile_types[] = {
 	{ { 0, 0, 0, 0 }, 0 }, // NULL
 	{ { 0, 1, 2, 3 }, 0 }, // floor
 	{ { 6, 6, 6, 6 }, 1 }, // wall
-	{ { 7, 7, 7, 7 }, 1 }, // door
 	{ { 4, 4, 5, 5 }, 0 }, // spike floor
 };
 
@@ -37,7 +36,8 @@ static int player_y = 2;
 
 static Dungeon dungeon;
 
-#define TILE_AT(x, y) (tile_types[dungeon.tiles[(x) + (y) * dungeon.w]])
+#define TILE_OBJ_AT(x, y) (tile_types[dungeon.tiles[(x) + (y) * dungeon.w]])
+#define TILE_AT(x, y) (dungeon.tiles[(x) + (y) * dungeon.w])
 #define DISC_AT(x, y) (dungeon.discovered[(x) + (y) * dungeon.w])
 
 static void draw_tile(int tile, unsigned char discovered, int x, int y) {
@@ -85,19 +85,12 @@ static void generate_corridor(Dungeon *dungeon, int ax, int ay, int bx, int by) 
 	int dx = ax < bx ? 1 : -1;
 	int dy = ay < by ? 1 : -1;
 
-	int boolean_placed_door = 0;
-
 	while (ax != bx || ay != by) {
 
 		// floors
 		if (dungeon->tiles[ax + ay * dungeon->w] == 2) {
 
-			if (boolean_placed_door) {
-				dungeon->tiles[ax + ay * dungeon->w] = 1;
-			} else {
-				dungeon->tiles[ax + ay * dungeon->w] = 3; // door
-				boolean_placed_door = 1;
-			}
+			dungeon->tiles[ax + ay * dungeon->w] = 1;
 
 		} else if (dungeon->tiles[ax + ay * dungeon->w] == 0) {
 			dungeon->tiles[ax + ay * dungeon->w] = 1;
@@ -156,7 +149,7 @@ static void generate_dungeon(Dungeon *dungeon) {
 		for (int iy = y + 1; iy < y + h - 1; iy++) {
 			
 			if ((ix % 8) / 2 == 0 && (iy % 8) / 2 == 0) {
-				dungeon->tiles[ix + iy * dungeon->w] = 4;
+				dungeon->tiles[ix + iy * dungeon->w] = 3; // spike
 			} else {
 				dungeon->tiles[ix + iy * dungeon->w] = 1;
 			}
@@ -203,29 +196,27 @@ void init(int *width, int *height) {
 
 void process(Input *input) {
 
-	if (input->up && input->up_justchanged && !TILE_AT(player_x, player_y - 1).bool_collidable) {
+	if (input->up && input->up_justchanged && !TILE_OBJ_AT(player_x, player_y - 1).bool_collidable) {
 		player_y--;
 	}
 
-	if (input->down && input->down_justchanged && !TILE_AT(player_x, player_y + 1).bool_collidable) {
+	if (input->down && input->down_justchanged && !TILE_OBJ_AT(player_x, player_y + 1).bool_collidable) {
 		player_y++;
 	}
 
-	if (input->left && input->left_justchanged && !TILE_AT(player_x - 1, player_y).bool_collidable) {
+	if (input->left && input->left_justchanged && !TILE_OBJ_AT(player_x - 1, player_y).bool_collidable) {
 		player_x--;
 	}
 
-	if (input->right && input->right_justchanged && !TILE_AT(player_x + 1, player_y).bool_collidable) {
+	if (input->right && input->right_justchanged && !TILE_OBJ_AT(player_x + 1, player_y).bool_collidable) {
 		player_x++;
 	}
 
 	for (int dx = -3; dx <= 3; dx++) {
 	for (int dy = -3; dy <= 3; dy++) {
 
-		if (
-			player_x + dx < 0 || player_x + dx >= dungeon.w ||
-			player_y + dy < 0 || player_y + dy >= dungeon.h
-		)
+		if (player_x + dx < 0 || player_x + dx >= dungeon.w ||
+			player_y + dy < 0 || player_y + dy >= dungeon.h)
 			continue;
 
 		DISC_AT(player_x + dx, player_y + dy) = dx == -3 || dx == 3 || dy == -3 || dy == 3 ? 1 : 2;
