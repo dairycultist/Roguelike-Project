@@ -61,6 +61,36 @@ static void draw_dungeon(Dungeon *dungeon) {
 
 static void generate_corridor(Dungeon *dungeon, int ax, int ay, int bx, int by) {
 
+	int dx = ax < bx ? 1 : -1;
+	int dy = ay < by ? 1 : -1;
+
+	while (ax != bx || ay != by) {
+
+		// floors
+		if (dungeon->tiles[ax + ay * dungeon->w] == 2) {
+			dungeon->tiles[ax + ay * dungeon->w] = 1; // TODO door
+		} else if (dungeon->tiles[ax + ay * dungeon->w] == 0) {
+			dungeon->tiles[ax + ay * dungeon->w] = 1;
+		}
+
+		// walls
+		if (dungeon->tiles[ax + (ay - 1) * dungeon->w] == 0)
+			dungeon->tiles[ax + (ay - 1) * dungeon->w] = 2;
+		if (dungeon->tiles[ax + (ay + 1) * dungeon->w] == 0)
+			dungeon->tiles[ax + (ay + 1) * dungeon->w] = 2;
+
+		// walls
+		if (dungeon->tiles[ax - 1 + ay * dungeon->w] == 0)
+			dungeon->tiles[ax - 1 + ay * dungeon->w] = 2;
+		if (dungeon->tiles[ax + 1 + ay * dungeon->w] == 0)
+			dungeon->tiles[ax + 1 + ay * dungeon->w] = 2;
+
+		if (ax != bx) {
+			ax += dx;
+		} else {
+			ay += dy;
+		}
+	}
 }
 
 // must have w, h preset (might change later so this instead spits out a malloc-ed dungeon pointer idc rn)
@@ -71,7 +101,7 @@ static void generate_dungeon(Dungeon *dungeon) {
 	int room_xs[128];
 	int room_ys[128];
 
-	int room_count = dungeon->w * dungeon->h / 256;
+	int room_count = 3;//dungeon->w * dungeon->h / 256;
 
 	// generate n rectangular rooms
 	for (int i = 0; i < room_count; i++) {
@@ -101,9 +131,8 @@ static void generate_dungeon(Dungeon *dungeon) {
 		room_ys[i] = y + h / 2;
 	}
 
-	// for each room, generate a corridor between its center and the center of:
-	// - the following room
-	// - (?) with a random chance, another randomly selected room
+	// for each room, generate a corridor between its center and the center of the following room
+	// (may change it up later; just want to make sure all rooms are connected for now)
 	for (int i = 0; i < room_count; i++) {
 		
 		generate_corridor(
