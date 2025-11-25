@@ -17,13 +17,10 @@ static const Tile tile_types[] = {
 	{ { 6, 6, 6, 6 }, 1 }, // wall
 };
 
-static int player_x = 0;
-static int player_y = 0;
+static int player_x = 2;
+static int player_y = 2;
 
 static void draw_tile(int tile, int x, int y) {
-
-	if ((y - player_y + 10) * 8 + 8 > 160) // bottom section of screen is for UI
-		return;
 
 	draw_render_t(
 		tile_sprites,
@@ -34,7 +31,20 @@ static void draw_tile(int tile, int x, int y) {
 	);
 }
 
-static void generate_dungeon(int **tiles, int w, int h) {
+static void draw_dungeon(int *tiles, int w, int h) {
+
+	for (int x = 0; x < w; x++) {
+		for (int y = 0; y < h; y++) {
+
+			if ((y - player_y + 10) * 8 + 8 > 160) // bottom section of screen is for UI
+				continue;
+
+			draw_tile(tiles[x + y * w], x, y);
+		}
+	}
+}
+
+static void generate_dungeon(int *tiles, int w, int h) {
 
 	// generate rectangular rooms
 	// one by one, connect a non-connected room to its closest room until all rooms are connected
@@ -66,12 +76,15 @@ void process(Input *input) {
 		player_x++;
 	}
 
-	for (int x = 0; x < 20; x++) {
-		for (int y = 0; y < 20; y++) {
-			draw_tile(0, x, y);
-		}
-	}
-	draw_tile(1, 0, 0);
+	int tiles[25] = {
+		1, 1, 1, 1, 1,
+		1, 0, 0, 0, 1,
+		1, 0, 0, 0, 1,
+		1, 1, 0, 1, 1,
+		0, 1, 0, 1, 0
+	};
+
+	draw_dungeon(tiles, 5, 5);
 
 	draw_render_t(player_sprite, 124, 80, 0, NULL);
 }
