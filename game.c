@@ -14,8 +14,10 @@ typedef struct {
 
 typedef struct {
 
-	int *tiles;
 	int w, h;
+
+	int *tiles;
+	int start_x, start_y;
 
 } Dungeon;
 
@@ -57,13 +59,64 @@ static void draw_dungeon(Dungeon *dungeon) {
 	}
 }
 
+static void generate_corridor(Dungeon *dungeon, int ax, int ay, int bx, int by) {
+
+}
+
+// must have w, h preset (might change later so this instead spits out a malloc-ed dungeon pointer idc rn)
 static void generate_dungeon(Dungeon *dungeon) {
 
-	// generate rectangular rooms
-	// one by one, connect a non-connected room to its closest room until all rooms are connected
 	dungeon->tiles = calloc(dungeon->w * dungeon->h, sizeof(int));
 
-	dungeon->tiles[0] = 1;
+	int room_xs[128];
+	int room_ys[128];
+
+	int room_count = dungeon->w * dungeon->h / 256;
+
+	// generate n rectangular rooms
+	for (int i = 0; i < room_count; i++) {
+
+		int w = (rand() % 7) + 5;
+		int h = (rand() % 7) + 5;
+
+		int x = rand() % (dungeon->w - w);
+		int y = rand() % (dungeon->h - h);
+
+		// walls
+		for (int ix = x; ix < x + w; ix++) {
+		for (int iy = y; iy < y + h; iy++) {
+			
+			if (dungeon->tiles[ix + iy * dungeon->w] == 0)
+				dungeon->tiles[ix + iy * dungeon->w] = 2;
+		}}
+
+		// floor + content
+		for (int ix = x + 1; ix < x + w - 1; ix++) {
+		for (int iy = y + 1; iy < y + h - 1; iy++) {
+			
+			dungeon->tiles[ix + iy * dungeon->w] = 1;
+		}}
+
+		room_xs[i] = x + w / 2;
+		room_ys[i] = y + h / 2;
+	}
+
+	// for each room, generate a corridor between its center and the center of:
+	// - the following room
+	// - (?) with a random chance, another randomly selected room
+	for (int i = 0; i < room_count; i++) {
+		
+		generate_corridor(
+			dungeon,
+			room_xs[i],
+			room_ys[i],
+			room_xs[(i + 1) % room_count],
+			room_ys[(i + 1) % room_count]
+		);
+	}
+
+	dungeon->start_x = room_xs[0];
+	dungeon->start_y = room_ys[0];
 }
 
 void init(int *width, int *height) {
@@ -73,9 +126,12 @@ void init(int *width, int *height) {
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 	player_sprite = load_sprite("knight.png");
 
-	dungeon.w = 10;
-	dungeon.h = 8;
+	dungeon.w = 64;
+	dungeon.h = 64;
 	generate_dungeon(&dungeon);
+
+	player_x = dungeon.start_x;
+	player_y = dungeon.start_y;
 }
 
 void process(Input *input) {
