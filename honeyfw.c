@@ -290,6 +290,10 @@ void draw_render_t(render_t r, int x, int y, int flip, const void *extra) {
 
 					if (*text >= 'A' && *text <= 'Z') {
 						sprite_i = *text - 65;
+					} else if (*text >= '0' && *text <= '9') {
+						sprite_i = *text - 10;
+					} else if (*text == ':') {
+						sprite_i = 37;
 					} else if (*text == '!') {
 						sprite_i = 26;
 					} else if (*text >= '\'' && *text <= '/') {
