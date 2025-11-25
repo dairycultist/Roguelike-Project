@@ -5,6 +5,7 @@
 
 static render_t tile_sprites;
 static render_t player_sprite;
+static render_t font;
 
 typedef struct {
 
@@ -172,6 +173,7 @@ void init(int *width, int *height) {
 	*height = 240;
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 	player_sprite = load_sprite("knight.png");
+	font = load_font("font.png", 6, 6);
 
 	dungeon.w = 64;
 	dungeon.h = 64;
@@ -202,4 +204,6 @@ void process(Input *input) {
 	draw_dungeon(&dungeon);
 
 	draw_render_t(player_sprite, 124, 80, 0, NULL);
+
+	draw_render_t(font, 1, 160, 0, "HP!");
 }

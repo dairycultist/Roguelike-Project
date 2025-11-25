@@ -24,7 +24,7 @@ typedef int render_t;
 
 render_t load_sprite(const char *path);
 render_t load_sprite_sheet(const char *path, int sprite_width, int sprite_height);
-// render_t load_font(const char *path, int char_width, int char_height);
+render_t load_font(const char *path, int char_width, int char_height);
 
 /* draw_render_t
  *

@@ -15,7 +15,7 @@ static inline void refit_letterbox(SDL_Rect *letterbox, int window_w, int window
 
 	#define MIN(a, b) ((a) > (b) ? (b) : (a))
 
-	// dynamically change letterbox based on screen resize
+	// dynamically change letterbox based on window resize
 	letterbox->w = MIN(window_w, window_h * ASPECT_RATIO);
 	letterbox->h = MIN(window_h, window_w / ASPECT_RATIO);
 
@@ -162,6 +162,13 @@ typedef struct {
 
 } SpriteSheet;
 
+typedef struct {
+
+	unsigned char type;
+	render_t sprite_sheet;
+
+} Font;
+
 static void *render_ts[256] = {};
 
 render_t load_sprite(const char *path) {
@@ -214,6 +221,26 @@ render_t load_sprite_sheet(const char *path, int sprite_width, int sprite_height
 	return -1;
 }
 
+render_t load_font(const char *path, int char_width, int char_height) {
+
+	Font *font = malloc(sizeof(Font));
+
+	font->type = TYPE_FONT;
+	font->sprite_sheet = load_sprite_sheet(path, char_width, char_height);
+
+	//
+	for (render_t i = 0; i < sizeof(render_ts); i++) {
+
+		if (render_ts[i] == NULL) {
+
+			render_ts[i] = font;
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 void draw_render_t(render_t r, int x, int y, int flip, const void *extra) {
 
 	switch (*(unsigned char *) render_ts[r]) {
@@ -237,6 +264,50 @@ void draw_render_t(render_t r, int x, int y, int flip, const void *extra) {
 			SDL_RenderCopyEx(renderer, sprite_sheet->sdl_texture, &copy_rect, &paste_rect, 0.0, NULL, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 			break;
 		}
+
+		case TYPE_FONT: { // special sprite sheet for text; follows a specific format
+
+			render_t sprite_sheet = ((Font *) render_ts[r])->sprite_sheet;
+			SpriteSheet *sprite_sheet_obj = (SpriteSheet *) (render_ts[sprite_sheet]);
+
+			const char *text = extra;
+			int start_x = x;
+
+			int sprite_i;
+
+			while (*text) {
+
+				if (*text == '\n') {
+
+					x = start_x;
+					y += sprite_sheet_obj->sprite_h + 1; // + 1 for line height spacing
+				}
+
+				else if (*text == ' ') {
+
+					x += sprite_sheet_obj->sprite_w;
+				}
+
+				else {
+
+					if (*text >= 'A' && *text <= 'Z') {
+						sprite_i = *text - 65;
+					} else if (*text == '!') {
+						sprite_i = 26;
+					} else if (*text >= '\'' && *text <= '/') {
+						sprite_i = *text - 11;
+					} else {
+						sprite_i = 27; // all unrecognized characters map to ? (including actual ?)
+					}
+
+					draw_render_t(sprite_sheet, x, y, 0, &sprite_i);
+					x += sprite_sheet_obj->sprite_w;
+				}
+
+				text++;
+			}
+			break;
+		}
 		
 		default:
 			break;
@@ -252,6 +323,7 @@ void free_render_t(render_t r) {
 			break;
 
 		case TYPE_SPRITE_SHEET:
+		case TYPE_FONT:
 			SDL_DestroyTexture(((SpriteSheet *) render_ts[r])->sdl_texture);
 			break;
 		
@@ -262,49 +334,3 @@ void free_render_t(render_t r) {
 	free(render_ts[r]);
 	render_ts[r] = NULL;
 }
-
-/*
- * special sprite sheet for text; follows a specific format
- */
-// void draw_text(SpriteSheet *sprite_sheet, char *text, int x, int y) {
-
-// 	int start_x = x;
-
-// 	while (*text) {
-
-// 		if (*text >= 'A' && *text <= 'Z') {
-
-// 			draw_sprite_from_sheet(sprite_sheet, *text - 65, x, y, 0);
-// 			x += sprite_sheet->sprite_w;
-// 		}
-
-// 		else if (*text == '!') {
-// 			draw_sprite_from_sheet(sprite_sheet, 26, x, y, 0);
-// 			x += sprite_sheet->sprite_w;
-// 		}
-
-// 		else if (*text == '?') {
-// 			draw_sprite_from_sheet(sprite_sheet, 27, x, y, 0);
-// 			x += sprite_sheet->sprite_w;
-// 		}
-
-// 		else if (*text >= '\'' && *text <= '/') {
-
-// 			draw_sprite_from_sheet(sprite_sheet, *text - 11, x, y, 0);
-// 			x += sprite_sheet->sprite_w;
-// 		}
-
-// 		else if (*text == '\n') {
-
-// 			x = start_x;
-// 			y += sprite_sheet->sprite_h + 1; // + 1 for line height spacing
-// 		}
-
-// 		else if (*text == ' ') {
-
-// 			x += sprite_sheet->sprite_w;
-// 		}
-
-// 		text++;
-// 	}
-// }
