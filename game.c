@@ -1,6 +1,6 @@
 #include "honeyfw.h"
 
-#include <stdio.h>
+#include <stdlib.h>
 
 static render_t tile_sprites;
 static render_t player_sprite;
@@ -12,7 +12,15 @@ typedef struct {
 
 } Tile;
 
+typedef struct {
+
+	int *tiles;
+	int w, h;
+
+} Dungeon;
+
 static const Tile tile_types[] = {
+	{ { 0, 0, 0, 0 }, 0 }, // NULL
 	{ { 0, 1, 2, 3 }, 0 }, // floor
 	{ { 6, 6, 6, 6 }, 1 }, // wall
 };
@@ -20,7 +28,12 @@ static const Tile tile_types[] = {
 static int player_x = 2;
 static int player_y = 2;
 
+static Dungeon dungeon;
+
 static void draw_tile(int tile, int x, int y) {
+
+	if (tile == 0)
+		return;
 
 	draw_render_t(
 		tile_sprites,
@@ -31,23 +44,26 @@ static void draw_tile(int tile, int x, int y) {
 	);
 }
 
-static void draw_dungeon(int *tiles, int w, int h) {
+static void draw_dungeon(Dungeon *dungeon) {
 
-	for (int x = 0; x < w; x++) {
-		for (int y = 0; y < h; y++) {
+	for (int x = 0; x < dungeon->w; x++) {
+		for (int y = 0; y < dungeon->h; y++) {
 
 			if ((y - player_y + 10) * 8 + 8 > 160) // bottom section of screen is for UI
 				continue;
 
-			draw_tile(tiles[x + y * w], x, y);
+			draw_tile(dungeon->tiles[x + y * dungeon->w], x, y);
 		}
 	}
 }
 
-static void generate_dungeon(int *tiles, int w, int h) {
+static void generate_dungeon(Dungeon *dungeon) {
 
 	// generate rectangular rooms
 	// one by one, connect a non-connected room to its closest room until all rooms are connected
+	dungeon->tiles = calloc(dungeon->w * dungeon->h, sizeof(int));
+
+	dungeon->tiles[0] = 1;
 }
 
 void init(int *width, int *height) {
@@ -56,6 +72,10 @@ void init(int *width, int *height) {
 	*height = 240;
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
 	player_sprite = load_sprite("knight.png");
+
+	dungeon.w = 10;
+	dungeon.h = 8;
+	generate_dungeon(&dungeon);
 }
 
 void process(Input *input) {
@@ -76,15 +96,7 @@ void process(Input *input) {
 		player_x++;
 	}
 
-	int tiles[25] = {
-		1, 1, 1, 1, 1,
-		1, 0, 0, 0, 1,
-		1, 0, 0, 0, 1,
-		1, 1, 0, 1, 1,
-		0, 1, 0, 1, 0
-	};
-
-	draw_dungeon(tiles, 5, 5);
+	draw_dungeon(&dungeon);
 
 	draw_render_t(player_sprite, 124, 80, 0, NULL);
 }
