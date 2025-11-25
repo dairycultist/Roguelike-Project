@@ -19,6 +19,7 @@ typedef struct {
 	int w, h;
 
 	int *tiles;
+	unsigned char *discovered; // 0=black, 1=dithered, 2=clear
 	int start_x, start_y;
 
 } Dungeon;
@@ -37,10 +38,11 @@ static int player_y = 2;
 static Dungeon dungeon;
 
 #define TILE_AT(x, y) (tile_types[dungeon.tiles[(x) + (y) * dungeon.w]])
+#define DISC_AT(x, y) (dungeon.discovered[(x) + (y) * dungeon.w])
 
-static void draw_tile(int tile, int x, int y) {
+static void draw_tile(int tile, unsigned char discovered, int x, int y) {
 
-	if (tile == 0)
+	if (tile == 0 || discovered == 0)
 		return;
 
 	draw_render_t(
@@ -50,6 +52,19 @@ static void draw_tile(int tile, int x, int y) {
 		0,
 		&tile_types[tile].sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + (int) (x * 5.5) + (int) (x * 21.72)) % 4]
 	);
+
+	if (discovered == 1) { // draw dither
+
+		static int dither_i = 63;
+
+		draw_render_t(
+			tile_sprites,
+			(x - player_x + 16) * 8 - 4,
+			(y - player_y + 10) * 8,
+			0,
+			&dither_i
+		);
+	}
 }
 
 static void draw_dungeon(Dungeon *dungeon) {
@@ -60,7 +75,7 @@ static void draw_dungeon(Dungeon *dungeon) {
 			if ((y - player_y + 10) * 8 + 8 > 160) // bottom section of screen is for UI
 				continue;
 
-			draw_tile(dungeon->tiles[x + y * dungeon->w], x, y);
+			draw_tile(dungeon->tiles[x + y * dungeon->w], dungeon->discovered[x + y * dungeon->w], x, y);
 		}
 	}
 }
@@ -111,7 +126,8 @@ static void generate_corridor(Dungeon *dungeon, int ax, int ay, int bx, int by) 
 // must have w, h preset (might change later so this instead spits out a malloc-ed dungeon pointer idc rn)
 static void generate_dungeon(Dungeon *dungeon) {
 
-	dungeon->tiles = calloc(dungeon->w * dungeon->h, sizeof(int));
+	dungeon->tiles      = calloc(dungeon->w * dungeon->h, sizeof(int));
+	dungeon->discovered = calloc(dungeon->w * dungeon->h, sizeof(int));
 
 	int room_xs[128];
 	int room_ys[128];
@@ -202,6 +218,18 @@ void process(Input *input) {
 	if (input->right && input->right_justchanged && !TILE_AT(player_x + 1, player_y).bool_collidable) {
 		player_x++;
 	}
+
+	for (int dx = -3; dx <= 3; dx++) {
+	for (int dy = -3; dy <= 3; dy++) {
+
+		if (
+			player_x + dx < 0 || player_x + dx >= dungeon.w ||
+			player_y + dy < 0 || player_y + dy >= dungeon.h
+		)
+			continue;
+
+		DISC_AT(player_x + dx, player_y + dy) = dx == -3 || dx == 3 || dy == -3 || dy == 3 ? 1 : 2;
+	}}
 
 	draw_dungeon(&dungeon);
 
