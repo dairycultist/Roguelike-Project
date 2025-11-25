@@ -36,6 +36,8 @@ static int player_y = 2;
 
 static Dungeon dungeon;
 
+#define TILE_AT(x, y) (tile_types[dungeon.tiles[(x) + (y) * dungeon.w]])
+
 static void draw_tile(int tile, int x, int y) {
 
 	if (tile == 0)
@@ -46,7 +48,7 @@ static void draw_tile(int tile, int x, int y) {
 		(x - player_x + 16) * 8 - 4,
 		(y - player_y + 10) * 8,
 		0,
-		&tile_types[tile].sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + x * 2 + y) % 4]
+		&tile_types[tile].sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + (int) (x * 5.5) + (int) (x * 21.72)) % 4]
 	);
 }
 
@@ -185,19 +187,19 @@ void init(int *width, int *height) {
 
 void process(Input *input) {
 
-	if (input->up && input->up_justchanged) {
+	if (input->up && input->up_justchanged && !TILE_AT(player_x, player_y - 1).bool_collidable) {
 		player_y--;
 	}
 
-	if (input->down && input->down_justchanged) {
+	if (input->down && input->down_justchanged && !TILE_AT(player_x, player_y + 1).bool_collidable) {
 		player_y++;
 	}
 
-	if (input->left && input->left_justchanged) {
+	if (input->left && input->left_justchanged && !TILE_AT(player_x - 1, player_y).bool_collidable) {
 		player_x--;
 	}
 
-	if (input->right && input->right_justchanged) {
+	if (input->right && input->right_justchanged && !TILE_AT(player_x + 1, player_y).bool_collidable) {
 		player_x++;
 	}
 
@@ -205,5 +207,5 @@ void process(Input *input) {
 
 	draw_render_t(player_sprite, 124, 80, 0, NULL);
 
-	draw_render_t(font, 1, 160, 0, "HP!");
+	draw_render_t(font, 1, 160, 0, "HP: 10/10");
 }

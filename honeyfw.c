@@ -281,14 +281,12 @@ void draw_render_t(render_t r, int x, int y, int flip, const void *extra) {
 
 					x = start_x;
 					y += sprite_sheet_obj->sprite_h + 1; // + 1 for line height spacing
-				}
-
-				else if (*text == ' ') {
+					
+				} else if (*text == ' ') {
 
 					x += sprite_sheet_obj->sprite_w;
-				}
 
-				else {
+				} else {
 
 					if (*text >= 'A' && *text <= 'Z') {
 						sprite_i = *text - 65;
