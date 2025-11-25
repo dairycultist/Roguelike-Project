@@ -27,7 +27,7 @@ static const Tile tile_types[] = {
 	{ { 0, 1, 2, 3 }, 0 }, // floor
 	{ { 6, 6, 6, 6 }, 1 }, // wall
 	{ { 7, 7, 7, 7 }, 1 }, // door
-	{ { 4, 4, 4, 4 }, 0 }, // spike floor
+	{ { 4, 4, 5, 5 }, 0 }, // spike floor
 };
 
 static int player_x = 2;
