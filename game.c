@@ -19,7 +19,7 @@ typedef struct {
 	int w, h;
 
 	int *tiles;
-	unsigned char *discovered; // 0=black, 1=dithered, 2=clear
+	unsigned char *light; // 0=black, 1=dithered, 2=clear
 	int start_x, start_y;
 
 } Dungeon;
@@ -38,11 +38,11 @@ static Dungeon dungeon;
 
 #define TILE_OBJ_AT(x, y) (tile_types[dungeon.tiles[(x) + (y) * dungeon.w]])
 #define TILE_AT(x, y) (dungeon.tiles[(x) + (y) * dungeon.w])
-#define DISC_AT(x, y) (dungeon.discovered[(x) + (y) * dungeon.w])
+#define LIGHT_AT(x, y) (dungeon.light[(x) + (y) * dungeon.w])
 
-static void draw_tile(int tile, unsigned char discovered, int x, int y) {
+static void draw_tile(int tile, unsigned char light, int x, int y) {
 
-	if (tile == 0 || discovered == 0)
+	if (tile == 0 || light == 0)
 		return;
 
 	draw_render_t(
@@ -53,7 +53,7 @@ static void draw_tile(int tile, unsigned char discovered, int x, int y) {
 		&tile_types[tile].sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + (int) (x * 5.5) + (int) (x * 21.72)) % 4]
 	);
 
-	if (discovered == 1) { // draw dither
+	if (light == 1) { // draw dither
 
 		static int dither_i = 63;
 
@@ -75,7 +75,7 @@ static void draw_dungeon(Dungeon *dungeon) {
 			if ((y - player_y + 10) * 8 + 8 > 160) // bottom section of screen is for UI
 				continue;
 
-			draw_tile(dungeon->tiles[x + y * dungeon->w], dungeon->discovered[x + y * dungeon->w], x, y);
+			draw_tile(dungeon->tiles[x + y * dungeon->w], dungeon->light[x + y * dungeon->w], x, y);
 		}
 	}
 }
@@ -119,8 +119,8 @@ static void generate_corridor(Dungeon *dungeon, int ax, int ay, int bx, int by) 
 // must have w, h preset (might change later so this instead spits out a malloc-ed dungeon pointer idc rn)
 static void generate_dungeon(Dungeon *dungeon) {
 
-	dungeon->tiles      = calloc(dungeon->w * dungeon->h, sizeof(int));
-	dungeon->discovered = calloc(dungeon->w * dungeon->h, sizeof(int));
+	dungeon->tiles = calloc(dungeon->w * dungeon->h, sizeof(int));
+	dungeon->light = calloc(dungeon->w * dungeon->h, sizeof(int));
 
 	int room_xs[128];
 	int room_ys[128];
@@ -194,24 +194,35 @@ void init(int *width, int *height) {
 	player_y = dungeon.start_y;
 }
 
+// after the player moves or uses an item, monsters take their turn, and the floor
+// beneath the player is checked for anything relevant (spikes, stairs, etc)
+void after_player_action() {
+
+}
+
 void process(Input *input) {
 
 	if (input->up && input->up_justchanged && !TILE_OBJ_AT(player_x, player_y - 1).bool_collidable) {
 		player_y--;
+		after_player_action();
 	}
 
 	if (input->down && input->down_justchanged && !TILE_OBJ_AT(player_x, player_y + 1).bool_collidable) {
 		player_y++;
+		after_player_action();
 	}
 
 	if (input->left && input->left_justchanged && !TILE_OBJ_AT(player_x - 1, player_y).bool_collidable) {
 		player_x--;
+		after_player_action();
 	}
 
 	if (input->right && input->right_justchanged && !TILE_OBJ_AT(player_x + 1, player_y).bool_collidable) {
 		player_x++;
+		after_player_action();
 	}
 
+	// update lighting
 	for (int dx = -3; dx <= 3; dx++) {
 	for (int dy = -3; dy <= 3; dy++) {
 
@@ -219,12 +230,13 @@ void process(Input *input) {
 			player_y + dy < 0 || player_y + dy >= dungeon.h)
 			continue;
 
-		DISC_AT(player_x + dx, player_y + dy) = dx == -3 || dx == 3 || dy == -3 || dy == 3 ? 1 : 2;
+		LIGHT_AT(player_x + dx, player_y + dy) = dx == -3 || dx == 3 || dy == -3 || dy == 3 ? 1 : 2;
 	}}
 
+	// draw dungeon view
 	draw_dungeon(&dungeon);
-
 	draw_render_t(player_sprite, 124, 80, 0, NULL);
 
+	// draw UI
 	draw_render_t(font, 1, 160, 0, "HP: 10/10");
 }
