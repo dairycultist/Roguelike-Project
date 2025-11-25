@@ -1,6 +1,7 @@
 #include "honeyfw.h"
 
 #include <stdlib.h>
+#include <time.h>
 
 static render_t tile_sprites;
 static render_t player_sprite;
@@ -25,6 +26,8 @@ static const Tile tile_types[] = {
 	{ { 0, 0, 0, 0 }, 0 }, // NULL
 	{ { 0, 1, 2, 3 }, 0 }, // floor
 	{ { 6, 6, 6, 6 }, 1 }, // wall
+	{ { 7, 7, 7, 7 }, 1 }, // door
+	{ { 4, 4, 4, 4 }, 0 }, // spike floor
 };
 
 static int player_x = 2;
@@ -64,11 +67,20 @@ static void generate_corridor(Dungeon *dungeon, int ax, int ay, int bx, int by) 
 	int dx = ax < bx ? 1 : -1;
 	int dy = ay < by ? 1 : -1;
 
+	int boolean_placed_door = 0;
+
 	while (ax != bx || ay != by) {
 
 		// floors
 		if (dungeon->tiles[ax + ay * dungeon->w] == 2) {
-			dungeon->tiles[ax + ay * dungeon->w] = 1; // TODO door
+
+			if (boolean_placed_door) {
+				dungeon->tiles[ax + ay * dungeon->w] = 1;
+			} else {
+				dungeon->tiles[ax + ay * dungeon->w] = 3; // door
+				boolean_placed_door = 1;
+			}
+
 		} else if (dungeon->tiles[ax + ay * dungeon->w] == 0) {
 			dungeon->tiles[ax + ay * dungeon->w] = 1;
 		}
@@ -101,7 +113,7 @@ static void generate_dungeon(Dungeon *dungeon) {
 	int room_xs[128];
 	int room_ys[128];
 
-	int room_count = 3;//dungeon->w * dungeon->h / 256;
+	int room_count = dungeon->w * dungeon->h / 800;
 
 	// generate n rectangular rooms
 	for (int i = 0; i < room_count; i++) {
@@ -124,7 +136,11 @@ static void generate_dungeon(Dungeon *dungeon) {
 		for (int ix = x + 1; ix < x + w - 1; ix++) {
 		for (int iy = y + 1; iy < y + h - 1; iy++) {
 			
-			dungeon->tiles[ix + iy * dungeon->w] = 1;
+			if ((ix % 8) / 2 == 0 && (iy % 8) / 2 == 0) {
+				dungeon->tiles[ix + iy * dungeon->w] = 4;
+			} else {
+				dungeon->tiles[ix + iy * dungeon->w] = 1;
+			}
 		}}
 
 		room_xs[i] = x + w / 2;
@@ -149,6 +165,8 @@ static void generate_dungeon(Dungeon *dungeon) {
 }
 
 void init(int *width, int *height) {
+
+	srand(time(NULL));
 
 	*width = 256;
 	*height = 240;
