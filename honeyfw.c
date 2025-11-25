@@ -67,6 +67,11 @@ int main() {
 
 	while (running) {
 
+		input.up_justchanged    = 0;
+		input.down_justchanged  = 0;
+		input.left_justchanged  = 0;
+		input.right_justchanged = 0;
+
 		while (SDL_PollEvent(&event)) {
 
 			if (event.type == SDL_QUIT) {
@@ -79,13 +84,31 @@ int main() {
 
 			} else if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && !event.key.repeat) {
 
-				// TODO update input
+				switch (event.key.keysym.scancode) {
 
-				// event.key.keysym.scancode
-				// event.key.state == SDL_PRESSED
-				// SDL_SCANCODE_Z
+					case SDL_SCANCODE_UP:
+						input.up = event.key.state == SDL_PRESSED;
+						input.up_justchanged = 1;
+						break;
 
-				printf("%d\n", event.key.keysym.scancode);
+					case SDL_SCANCODE_DOWN:
+						input.down = event.key.state == SDL_PRESSED;
+						input.down_justchanged = 1;
+						break;
+
+					case SDL_SCANCODE_LEFT:
+						input.left = event.key.state == SDL_PRESSED;
+						input.left_justchanged = 1;
+						break;
+
+					case SDL_SCANCODE_RIGHT:
+						input.right = event.key.state == SDL_PRESSED;
+						input.right_justchanged = 1;
+						break;
+					
+					default:
+						break;
+				}
 			}
 		}
 
