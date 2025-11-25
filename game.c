@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 static render_t tile_sprites;
+static render_t player_sprite;
 
 typedef unsigned char tile_id;
 
@@ -21,10 +22,14 @@ static int player_x = 0;
 static int player_y = 0;
 
 static void draw_tile(const Tile *tile, int x, int y) {
+
+	if ((y - player_y + 10) * 8 + 8 > 160) // bottom section of screen is for UI
+		return;
+
 	draw_render_t(
 		tile_sprites,
-		(x - player_x) * 8,
-		(y - player_y) * 8,
+		(x - player_x + 16) * 8 - 4,
+		(y - player_y + 10) * 8,
 		0,
 		&tile->sprites[(((x >> 1) * x + (y >> 1) * y) * (y & 0b01010101) + x * 2 + y) % 4]
 	);
@@ -41,6 +46,7 @@ void init(int *width, int *height) {
 	*width = 256;
 	*height = 240;
 	tile_sprites = load_sprite_sheet("rogue_tileset.png", 8, 8);
+	player_sprite = load_sprite("knight.png");
 }
 
 void process(Input *input) {
@@ -66,4 +72,6 @@ void process(Input *input) {
 			draw_tile(&tiles[0], x, y);
 		}
 	}
+
+	draw_render_t(player_sprite, 124, 80, 0, NULL);
 }
